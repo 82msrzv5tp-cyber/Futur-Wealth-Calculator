@@ -1,0 +1,1702 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Expected Wealth Calculator</title>
+  <style>
+    :root {
+      --bg: #f6f7f3;
+      --ink: #17211b;
+      --muted: #667064;
+      --panel: #ffffff;
+      --line: #dfe4dc;
+      --green: #1f7a4d;
+      --green-dark: #145c39;
+      --blue: #315f8f;
+      --amber: #b66a00;
+      --danger: #b3261e;
+      --shadow: 0 14px 38px rgba(25, 34, 28, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    header {
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 38px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .tag {
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 540px;
+      line-height: 1.45;
+      margin: 8px 0 0;
+    }
+
+    .language-switch {
+      min-width: 190px;
+    }
+
+    main {
+      padding: 28px 0 44px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 380px minmax(0, 1fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin: 0;
+      padding: 18px 18px 0;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .body {
+      padding: 18px;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    input, select {
+      width: 100%;
+      height: 42px;
+      border: 1px solid #cbd3c8;
+      border-radius: 6px;
+      padding: 0 11px;
+      color: var(--ink);
+      background: #fff;
+      font: inherit;
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid rgba(31, 122, 77, 0.23);
+      border-color: var(--green);
+    }
+
+    .investment-head,
+    .investment-row {
+      display: grid;
+      grid-template-columns: 1.15fr 0.7fr 0.7fr 36px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .investment-head {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 20px 0 8px;
+    }
+
+    .investment-row + .investment-row { margin-top: 8px; }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      height: 40px;
+      padding: 0 14px;
+      font: inherit;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    .primary {
+      width: 100%;
+      margin-top: 16px;
+      background: var(--green);
+      color: #fff;
+    }
+
+    .primary:hover { background: var(--green-dark); }
+
+    .secondary {
+      margin-top: 12px;
+      background: #e7efe9;
+      color: var(--green-dark);
+    }
+
+    .icon-btn {
+      width: 36px;
+      padding: 0;
+      background: #f1f3ef;
+      color: var(--danger);
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fbfcfa;
+      min-height: 102px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 10px;
+      font-size: clamp(20px, 2.2vw, 30px);
+      line-height: 1.05;
+      word-break: break-word;
+    }
+
+    .metric small {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .notice {
+      border-left: 4px solid var(--amber);
+      background: #fff7e8;
+      color: #66420a;
+      padding: 12px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1.45;
+      margin-bottom: 18px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 12px 13px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+
+    th {
+      color: var(--muted);
+      background: #f8faf7;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .allocation-warning {
+      margin-top: 10px;
+      color: var(--danger);
+      font-size: 13px;
+      line-height: 1.4;
+      min-height: 18px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 260px;
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      margin-bottom: 18px;
+    }
+
+    .insights {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .insights b { color: var(--ink); }
+
+    .advisor {
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfa;
+      padding: 16px;
+    }
+
+    .advisor h3 {
+      margin: 0 0 12px;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+
+    .advisor-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .advisor-stat {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      padding: 11px;
+    }
+
+    .advisor-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .advisor-stat strong {
+      display: block;
+      margin-top: 7px;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .advice-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .advice-list li {
+      border-left: 4px solid var(--green);
+      background: #fff;
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .advice-list b { color: var(--ink); }
+
+    .advisor-disclaimer {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .planning-panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .mini-panel,
+    .scenario-panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfa;
+      padding: 14px;
+    }
+
+    .mini-panel h3,
+    .scenario-panel h3 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .mini-panel strong {
+      display: block;
+      font-size: 26px;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .mini-panel p,
+    .scenario-card p,
+    .ai-question p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    #allocationChart {
+      width: 100%;
+      height: 220px;
+      margin: 0;
+    }
+
+    .scenario-panel {
+      margin-bottom: 18px;
+    }
+
+    .scenario-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .scenario-head h3 {
+      margin: 0;
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .scenario-card {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      padding: 11px;
+    }
+
+    .scenario-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .scenario-card strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 20px;
+      line-height: 1.1;
+      word-break: break-word;
+    }
+
+    .ai-question {
+      margin-top: 14px;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 76px;
+      border: 1px solid #cbd3c8;
+      border-radius: 6px;
+      padding: 10px 11px;
+      resize: vertical;
+      color: var(--ink);
+      font: inherit;
+    }
+
+    textarea:focus {
+      outline: 2px solid rgba(31, 122, 77, 0.23);
+      border-color: var(--green);
+    }
+
+    .ai-question button {
+      margin-top: 10px;
+    }
+
+    .ai-question p {
+      margin-top: 10px;
+    }
+
+    html[dir="rtl"] body {
+      font-family: Tahoma, Arial, ui-sans-serif, system-ui, sans-serif;
+    }
+
+    html[dir="rtl"] .notice {
+      border-left: 0;
+      border-right: 4px solid var(--amber);
+    }
+
+    html[dir="rtl"] th,
+    html[dir="rtl"] td {
+      text-align: left;
+    }
+
+    html[dir="rtl"] th:first-child,
+    html[dir="rtl"] td:first-child {
+      text-align: right;
+    }
+
+    html[dir="rtl"] .advice-list li {
+      border-left: 0;
+      border-right: 4px solid var(--green);
+    }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 620px) {
+      .wrap { width: min(100% - 22px, 1180px); }
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+        justify-content: center;
+        padding: 18px 0;
+      }
+      .language-switch { min-width: 0; }
+      .fields,
+      .summary { grid-template-columns: 1fr; }
+      .advisor-grid { grid-template-columns: 1fr; }
+      .planning-panels,
+      .scenario-grid { grid-template-columns: 1fr; }
+      .scenario-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
+      .investment-head,
+      .investment-row {
+        grid-template-columns: 1fr 74px 74px 36px;
+      }
+      th, td { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap topbar">
+      <div>
+        <h1 data-i18n="appTitle">Expected Wealth Calculator</h1>
+        <p class="tag" data-i18n="tagline">Project future wealth from income, savings, investments, expected returns, and inflation over a 1 to 10 year period.</p>
+      </div>
+      <label class="language-switch">
+        <span data-i18n="language">Language</span>
+        <select id="language">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="fr">Français</option>
+          <option value="es">Español</option>
+          <option value="it">Italiano</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <section class="panel">
+        <h2 data-i18n="inputs">Inputs</h2>
+        <div class="body">
+          <div class="fields">
+            <label>
+              <span data-i18n="currency">Currency</span>
+              <select id="currency">
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="EGP">EGP</option>
+                <option value="SAR">SAR</option>
+                <option value="AED">AED</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="projectionPeriod">Projection period</span>
+              <select id="years">
+                <option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option>
+                <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="currentWealth">Current wealth</span>
+              <input id="wealth" type="number" min="0" step="100" value="10000">
+            </label>
+            <label>
+              <span data-i18n="monthlyIncome">Monthly income</span>
+              <input id="income" type="number" min="0" step="100" value="5000">
+            </label>
+            <label>
+              <span data-i18n="monthlyExpenses">Monthly expenses</span>
+              <input id="expenses" type="number" min="0" step="100" value="3000">
+            </label>
+            <label>
+              <span data-i18n="annualIncomeGrowth">Annual income growth %</span>
+              <input id="incomeGrowth" type="number" step="0.1" value="3">
+            </label>
+            <label>
+              <span data-i18n="inflationPercent">Inflation %</span>
+              <input id="inflation" type="number" step="0.1" value="3">
+            </label>
+            <label>
+              <span data-i18n="inflationHelper">Inflation helper</span>
+              <select id="inflationPreset">
+                <option value="" data-i18n="chooseEstimate">Choose estimate</option>
+                <option value="3.0" data-i18n="usInflation">US long-run target area: 3.0%</option>
+                <option value="2.5" data-i18n="euroInflation">Euro area target area: 2.5%</option>
+                <option value="6.0" data-i18n="emergingInflation">Emerging market estimate: 6.0%</option>
+                <option value="10.0" data-i18n="highInflation">High inflation estimate: 10.0%</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="countryInflation">Country inflation</span>
+              <select id="countryInflation">
+                <option value="" data-i18n="manualInflation">Manual inflation</option>
+                <option value="3.0">United States: 3.0%</option>
+                <option value="2.5">Euro area: 2.5%</option>
+                <option value="3.2">United Kingdom: 3.2%</option>
+                <option value="2.3">France: 2.3%</option>
+                <option value="2.8">Spain: 2.8%</option>
+                <option value="2.4">Italy: 2.4%</option>
+                <option value="12.0">Egypt: 12.0%</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="riskProfile">Risk profile</span>
+              <select id="riskProfile">
+                <option value="conservative" data-i18n="riskConservative">Conservative</option>
+                <option value="balanced" selected data-i18n="riskBalanced">Balanced</option>
+                <option value="aggressive" data-i18n="riskAggressive">Aggressive</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="goalType">Goal</span>
+              <select id="goalType">
+                <option value="wealth" data-i18n="goalWealth">Build wealth</option>
+                <option value="house" data-i18n="goalHouse">Buy a house</option>
+                <option value="retirement" data-i18n="goalRetirement">Retirement</option>
+                <option value="education" data-i18n="goalEducation">Education</option>
+              </select>
+            </label>
+            <label>
+              <span data-i18n="goalAmount">Goal amount</span>
+              <input id="goalAmount" type="number" min="0" step="1000" value="100000">
+            </label>
+            <label>
+              <span data-i18n="monthlyInvestmentPercent">Savings invested monthly %</span>
+              <input id="investPercent" type="number" min="0" max="100" step="1" value="100">
+            </label>
+            <label>
+              <span data-i18n="debtBalance">Debt balance</span>
+              <input id="debtBalance" type="number" min="0" step="100" value="0">
+            </label>
+            <label>
+              <span data-i18n="debtInterest">Debt interest %</span>
+              <input id="debtInterest" type="number" min="0" step="0.1" value="0">
+            </label>
+            <label>
+              <span data-i18n="monthlyDebtPayment">Monthly debt payment</span>
+              <input id="debtPayment" type="number" min="0" step="50" value="0">
+            </label>
+          </div>
+
+          <div class="investment-head">
+            <span data-i18n="investment">Investment</span>
+            <span data-i18n="allocation">Allocation %</span>
+            <span data-i18n="returnPercent">Return %</span>
+            <span></span>
+          </div>
+          <div id="investments"></div>
+          <button class="secondary" id="addInvestment" type="button" data-i18n="addInvestment">Add investment</button>
+          <div class="allocation-warning" id="allocationWarning"></div>
+          <button class="primary" id="calculate" type="button" data-i18n="calculateWealth">Calculate wealth</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 data-i18n="projection">Projection</h2>
+        <div class="body">
+          <div class="notice" data-i18n="notice">Inflation is an assumption here. For a production AI version, connect this field to an API or AI service that retrieves the latest official inflation data for the user's country.</div>
+          <div class="summary">
+            <div class="metric">
+              <span data-i18n="finalNominalWealth">Final nominal wealth</span>
+              <strong id="finalNominal">$0</strong>
+              <small data-i18n="nominalHelp">Money value before inflation adjustment</small>
+            </div>
+            <div class="metric">
+              <span data-i18n="finalRealWealth">Final real wealth</span>
+              <strong id="finalReal">$0</strong>
+              <small data-i18n="realHelp">Today's purchasing power</small>
+            </div>
+            <div class="metric">
+              <span data-i18n="weightedReturnLabel">Weighted return</span>
+              <strong id="weightedReturn">0%</strong>
+              <small data-i18n="weightedHelp">Based on investment allocation</small>
+            </div>
+            <div class="metric">
+              <span data-i18n="totalContributionsLabel">Total contributions</span>
+              <strong id="totalContributions">$0</strong>
+              <small data-i18n="contributionsHelp">Savings invested over the period</small>
+            </div>
+          </div>
+          <canvas id="chart" width="900" height="300" aria-label="Wealth projection chart"></canvas>
+          <div class="planning-panels">
+            <div class="mini-panel">
+              <h3 data-i18n="goalProgressTitle">Goal progress</h3>
+              <strong id="goalStatus">$0</strong>
+              <p id="goalAdvice"></p>
+            </div>
+            <div class="mini-panel">
+              <h3 data-i18n="allocationChartTitle">Investment breakdown</h3>
+              <canvas id="allocationChart" width="360" height="220" aria-label="Investment allocation chart"></canvas>
+            </div>
+          </div>
+          <section class="scenario-panel">
+            <div class="scenario-head">
+              <h3 data-i18n="scenarioTitle">Scenario comparison</h3>
+              <button class="secondary" id="exportReport" type="button" data-i18n="exportReport">Export PDF report</button>
+            </div>
+            <div class="scenario-grid" id="scenarioGrid"></div>
+          </section>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th data-i18n="year">Year</th>
+                  <th data-i18n="income">Income</th>
+                  <th data-i18n="savingsInvested">Savings invested</th>
+                  <th data-i18n="investmentGrowth">Investment growth</th>
+                  <th data-i18n="nominalWealth">Nominal wealth</th>
+                  <th data-i18n="realWealth">Real wealth</th>
+                </tr>
+              </thead>
+              <tbody id="projectionRows"></tbody>
+            </table>
+          </div>
+          <div class="insights" id="insights"></div>
+          <section class="advisor" aria-live="polite">
+            <h3 data-i18n="advisorTitle">AI financial coach</h3>
+            <div class="advisor-grid">
+              <div class="advisor-stat">
+                <span data-i18n="savingsRateLabel">Savings rate</span>
+                <strong id="advisorSavingsRate">0%</strong>
+              </div>
+              <div class="advisor-stat">
+                <span data-i18n="realReturnLabel">Real return estimate</span>
+                <strong id="advisorRealReturn">0%</strong>
+              </div>
+              <div class="advisor-stat">
+                <span data-i18n="emergencyFundLabel">Emergency fund target</span>
+                <strong id="advisorEmergencyFund">$0</strong>
+              </div>
+            </div>
+            <ul class="advice-list" id="adviceList"></ul>
+            <div class="ai-question">
+              <label>
+                <span data-i18n="askAdvisor">Ask the advisor</span>
+                <textarea id="advisorQuestion" rows="3" data-i18n-placeholder="askAdvisorPlaceholder" placeholder="Example: What should I change first?"></textarea>
+              </label>
+              <button class="secondary" id="askAdvisorButton" type="button" data-i18n="askButton">Ask</button>
+              <p id="advisorAnswer"></p>
+            </div>
+            <p class="advisor-disclaimer" data-i18n="advisorDisclaimer">This is educational guidance generated from your inputs, not licensed financial advice.</p>
+          </section>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const translations = {
+      en: {
+        appTitle: "Expected Wealth Calculator",
+        tagline: "Project future wealth from income, savings, investments, expected returns, and inflation over a 1 to 10 year period.",
+        language: "Language",
+        inputs: "Inputs",
+        currency: "Currency",
+        projectionPeriod: "Projection period",
+        currentWealth: "Current wealth",
+        monthlyIncome: "Monthly income",
+        monthlyExpenses: "Monthly expenses",
+        annualIncomeGrowth: "Annual income growth %",
+        inflationPercent: "Inflation %",
+        inflationHelper: "Inflation helper",
+        chooseEstimate: "Choose estimate",
+        usInflation: "US long-run target area: 3.0%",
+        euroInflation: "Euro area target area: 2.5%",
+        emergingInflation: "Emerging market estimate: 6.0%",
+        highInflation: "High inflation estimate: 10.0%",
+        investment: "Investment",
+        allocation: "Allocation %",
+        returnPercent: "Return %",
+        addInvestment: "Add investment",
+        calculateWealth: "Calculate wealth",
+        projection: "Projection",
+        notice: "Inflation is an assumption here. For a production AI version, connect this field to an API or AI service that retrieves the latest official inflation data for the user's country.",
+        finalNominalWealth: "Final nominal wealth",
+        nominalHelp: "Money value before inflation adjustment",
+        finalRealWealth: "Final real wealth",
+        realHelp: "Today's purchasing power",
+        weightedReturnLabel: "Weighted return",
+        weightedHelp: "Based on investment allocation",
+        totalContributionsLabel: "Total contributions",
+        contributionsHelp: "Savings invested over the period",
+        year: "Year",
+        income: "Income",
+        savingsInvested: "Savings invested",
+        investmentGrowth: "Investment growth",
+        nominalWealth: "Nominal wealth",
+        realWealth: "Real wealth",
+        defaultStocks: "Stocks",
+        defaultBonds: "Bonds",
+        defaultCash: "Cash",
+        newInvestment: "New investment",
+        fallbackInvestment: "Investment",
+        removeInvestment: "Remove investment",
+        investmentName: "Investment name",
+        allocationPercentage: "Allocation percentage",
+        expectedAnnualReturn: "Expected annual return",
+        yearNumber: "Year {year}",
+        allocationWarning: "Allocations currently total {total}%. They should equal 100%.",
+        chartNominal: "Nominal",
+        chartReal: "Real",
+        inflationImpact: "Inflation impact:",
+        inflationImpactText: "at {inflation} annual inflation, purchasing power is reduced by {gap} over the selected period.",
+        planningNote: "Planning note:",
+        planningNoteText: "real wealth is usually the better number for lifestyle planning because it estimates what the money can buy in today's terms."
+      },
+      ar: {
+        appTitle: "حاسبة الثروة المتوقعة",
+        tagline: "احسب ثروتك المستقبلية من الدخل والمدخرات والاستثمارات والعوائد المتوقعة والتضخم خلال فترة من سنة إلى 10 سنوات.",
+        language: "اللغة",
+        inputs: "المدخلات",
+        currency: "العملة",
+        projectionPeriod: "فترة التوقع",
+        currentWealth: "الثروة الحالية",
+        monthlyIncome: "الدخل الشهري",
+        monthlyExpenses: "المصروفات الشهرية",
+        annualIncomeGrowth: "نمو الدخل السنوي %",
+        inflationPercent: "التضخم %",
+        inflationHelper: "مساعد التضخم",
+        chooseEstimate: "اختر تقديرا",
+        usInflation: "تقدير طويل الأجل للولايات المتحدة: 3.0%",
+        euroInflation: "تقدير منطقة اليورو: 2.5%",
+        emergingInflation: "تقدير الأسواق الناشئة: 6.0%",
+        highInflation: "تقدير تضخم مرتفع: 10.0%",
+        investment: "الاستثمار",
+        allocation: "النسبة %",
+        returnPercent: "العائد %",
+        addInvestment: "إضافة استثمار",
+        calculateWealth: "احسب الثروة",
+        projection: "التوقعات",
+        notice: "التضخم هنا افتراض. في نسخة إنتاجية بالذكاء الاصطناعي، يمكن ربط هذا الحقل بواجهة API أو خدمة ذكاء اصطناعي تجلب أحدث بيانات التضخم الرسمية لبلد المستخدم.",
+        finalNominalWealth: "الثروة الاسمية النهائية",
+        nominalHelp: "قيمة المال قبل تعديل التضخم",
+        finalRealWealth: "الثروة الحقيقية النهائية",
+        realHelp: "القوة الشرائية بقيمة اليوم",
+        weightedReturnLabel: "العائد المرجح",
+        weightedHelp: "بناء على توزيع الاستثمارات",
+        totalContributionsLabel: "إجمالي المساهمات",
+        contributionsHelp: "المدخرات المستثمرة خلال الفترة",
+        year: "السنة",
+        income: "الدخل",
+        savingsInvested: "المدخرات المستثمرة",
+        investmentGrowth: "نمو الاستثمار",
+        nominalWealth: "الثروة الاسمية",
+        realWealth: "الثروة الحقيقية",
+        defaultStocks: "أسهم",
+        defaultBonds: "سندات",
+        defaultCash: "نقد",
+        newInvestment: "استثمار جديد",
+        fallbackInvestment: "استثمار",
+        removeInvestment: "حذف الاستثمار",
+        investmentName: "اسم الاستثمار",
+        allocationPercentage: "نسبة التوزيع",
+        expectedAnnualReturn: "العائد السنوي المتوقع",
+        yearNumber: "السنة {year}",
+        allocationWarning: "إجمالي النسب حاليا {total}%. يجب أن يساوي 100%.",
+        chartNominal: "اسمي",
+        chartReal: "حقيقي",
+        inflationImpact: "أثر التضخم:",
+        inflationImpactText: "عند تضخم سنوي {inflation}، تنخفض القوة الشرائية بمقدار {gap} خلال الفترة المختارة.",
+        planningNote: "ملاحظة تخطيطية:",
+        planningNoteText: "الثروة الحقيقية غالبا هي الرقم الأفضل لتخطيط نمط الحياة لأنها تقدر ما يمكن أن يشتريه المال بقيمة اليوم."
+      },
+      fr: {
+        appTitle: "Calculateur de richesse attendue",
+        tagline: "Projetez votre richesse future à partir des revenus, de l'épargne, des investissements, des rendements attendus et de l'inflation sur 1 à 10 ans.",
+        language: "Langue",
+        inputs: "Données",
+        currency: "Devise",
+        projectionPeriod: "Période de projection",
+        currentWealth: "Richesse actuelle",
+        monthlyIncome: "Revenu mensuel",
+        monthlyExpenses: "Dépenses mensuelles",
+        annualIncomeGrowth: "Croissance annuelle du revenu %",
+        inflationPercent: "Inflation %",
+        inflationHelper: "Aide inflation",
+        chooseEstimate: "Choisir une estimation",
+        usInflation: "Zone cible long terme US : 3,0 %",
+        euroInflation: "Zone cible euro : 2,5 %",
+        emergingInflation: "Estimation marché émergent : 6,0 %",
+        highInflation: "Estimation inflation élevée : 10,0 %",
+        investment: "Investissement",
+        allocation: "Allocation %",
+        returnPercent: "Rendement %",
+        addInvestment: "Ajouter un investissement",
+        calculateWealth: "Calculer la richesse",
+        projection: "Projection",
+        notice: "L'inflation est une hypothèse ici. Pour une version IA en production, connectez ce champ à une API ou un service IA qui récupère les dernières données officielles d'inflation du pays de l'utilisateur.",
+        finalNominalWealth: "Richesse nominale finale",
+        nominalHelp: "Valeur avant ajustement de l'inflation",
+        finalRealWealth: "Richesse réelle finale",
+        realHelp: "Pouvoir d'achat d'aujourd'hui",
+        weightedReturnLabel: "Rendement pondéré",
+        weightedHelp: "Basé sur l'allocation des investissements",
+        totalContributionsLabel: "Contributions totales",
+        contributionsHelp: "Épargne investie sur la période",
+        year: "Année",
+        income: "Revenu",
+        savingsInvested: "Épargne investie",
+        investmentGrowth: "Croissance des investissements",
+        nominalWealth: "Richesse nominale",
+        realWealth: "Richesse réelle",
+        defaultStocks: "Actions",
+        defaultBonds: "Obligations",
+        defaultCash: "Liquidités",
+        newInvestment: "Nouvel investissement",
+        fallbackInvestment: "Investissement",
+        removeInvestment: "Supprimer l'investissement",
+        investmentName: "Nom de l'investissement",
+        allocationPercentage: "Pourcentage d'allocation",
+        expectedAnnualReturn: "Rendement annuel attendu",
+        yearNumber: "Année {year}",
+        allocationWarning: "Les allocations totalisent actuellement {total} %. Elles doivent être égales à 100 %.",
+        chartNominal: "Nominal",
+        chartReal: "Réel",
+        inflationImpact: "Impact de l'inflation :",
+        inflationImpactText: "avec {inflation} d'inflation annuelle, le pouvoir d'achat est réduit de {gap} sur la période sélectionnée.",
+        planningNote: "Note de planification :",
+        planningNoteText: "la richesse réelle est généralement le meilleur chiffre pour planifier son niveau de vie, car elle estime ce que l'argent peut acheter aujourd'hui."
+      },
+      es: {
+        appTitle: "Calculadora de riqueza esperada",
+        tagline: "Proyecta tu riqueza futura con ingresos, ahorros, inversiones, rendimientos esperados e inflación durante un periodo de 1 a 10 años.",
+        language: "Idioma",
+        inputs: "Datos",
+        currency: "Moneda",
+        projectionPeriod: "Periodo de proyección",
+        currentWealth: "Riqueza actual",
+        monthlyIncome: "Ingreso mensual",
+        monthlyExpenses: "Gastos mensuales",
+        annualIncomeGrowth: "Crecimiento anual del ingreso %",
+        inflationPercent: "Inflación %",
+        inflationHelper: "Ayuda de inflación",
+        chooseEstimate: "Elegir estimación",
+        usInflation: "Área objetivo a largo plazo de EE. UU.: 3.0%",
+        euroInflation: "Área objetivo de la zona euro: 2.5%",
+        emergingInflation: "Estimación de mercado emergente: 6.0%",
+        highInflation: "Estimación de inflación alta: 10.0%",
+        investment: "Inversión",
+        allocation: "Asignación %",
+        returnPercent: "Retorno %",
+        addInvestment: "Añadir inversión",
+        calculateWealth: "Calcular riqueza",
+        projection: "Proyección",
+        notice: "La inflación es una suposición aquí. Para una versión de IA en producción, conecta este campo a una API o servicio de IA que obtenga los últimos datos oficiales de inflación del país del usuario.",
+        finalNominalWealth: "Riqueza nominal final",
+        nominalHelp: "Valor del dinero antes del ajuste por inflación",
+        finalRealWealth: "Riqueza real final",
+        realHelp: "Poder adquisitivo de hoy",
+        weightedReturnLabel: "Retorno ponderado",
+        weightedHelp: "Basado en la asignación de inversión",
+        totalContributionsLabel: "Contribuciones totales",
+        contributionsHelp: "Ahorros invertidos durante el periodo",
+        year: "Año",
+        income: "Ingreso",
+        savingsInvested: "Ahorros invertidos",
+        investmentGrowth: "Crecimiento de inversión",
+        nominalWealth: "Riqueza nominal",
+        realWealth: "Riqueza real",
+        defaultStocks: "Acciones",
+        defaultBonds: "Bonos",
+        defaultCash: "Efectivo",
+        newInvestment: "Nueva inversión",
+        fallbackInvestment: "Inversión",
+        removeInvestment: "Eliminar inversión",
+        investmentName: "Nombre de inversión",
+        allocationPercentage: "Porcentaje de asignación",
+        expectedAnnualReturn: "Retorno anual esperado",
+        yearNumber: "Año {year}",
+        allocationWarning: "Las asignaciones suman actualmente {total}%. Deben sumar 100%.",
+        chartNominal: "Nominal",
+        chartReal: "Real",
+        inflationImpact: "Impacto de la inflación:",
+        inflationImpactText: "con {inflation} de inflación anual, el poder adquisitivo se reduce en {gap} durante el periodo seleccionado.",
+        planningNote: "Nota de planificación:",
+        planningNoteText: "la riqueza real suele ser el mejor número para planificar el estilo de vida porque estima lo que el dinero puede comprar en términos de hoy."
+      },
+      it: {
+        appTitle: "Calcolatore della ricchezza attesa",
+        tagline: "Proietta la ricchezza futura da reddito, risparmi, investimenti, rendimenti attesi e inflazione in un periodo da 1 a 10 anni.",
+        language: "Lingua",
+        inputs: "Dati",
+        currency: "Valuta",
+        projectionPeriod: "Periodo di proiezione",
+        currentWealth: "Ricchezza attuale",
+        monthlyIncome: "Reddito mensile",
+        monthlyExpenses: "Spese mensili",
+        annualIncomeGrowth: "Crescita annua del reddito %",
+        inflationPercent: "Inflazione %",
+        inflationHelper: "Aiuto inflazione",
+        chooseEstimate: "Scegli stima",
+        usInflation: "Area obiettivo USA di lungo periodo: 3,0%",
+        euroInflation: "Area obiettivo euro: 2,5%",
+        emergingInflation: "Stima mercato emergente: 6,0%",
+        highInflation: "Stima inflazione alta: 10,0%",
+        investment: "Investimento",
+        allocation: "Allocazione %",
+        returnPercent: "Rendimento %",
+        addInvestment: "Aggiungi investimento",
+        calculateWealth: "Calcola ricchezza",
+        projection: "Proiezione",
+        notice: "L'inflazione qui è un'ipotesi. Per una versione IA in produzione, collega questo campo a un'API o a un servizio IA che recuperi gli ultimi dati ufficiali sull'inflazione del paese dell'utente.",
+        finalNominalWealth: "Ricchezza nominale finale",
+        nominalHelp: "Valore prima dell'aggiustamento per inflazione",
+        finalRealWealth: "Ricchezza reale finale",
+        realHelp: "Potere d'acquisto di oggi",
+        weightedReturnLabel: "Rendimento ponderato",
+        weightedHelp: "Basato sull'allocazione degli investimenti",
+        totalContributionsLabel: "Contributi totali",
+        contributionsHelp: "Risparmi investiti nel periodo",
+        year: "Anno",
+        income: "Reddito",
+        savingsInvested: "Risparmi investiti",
+        investmentGrowth: "Crescita investimento",
+        nominalWealth: "Ricchezza nominale",
+        realWealth: "Ricchezza reale",
+        defaultStocks: "Azioni",
+        defaultBonds: "Obbligazioni",
+        defaultCash: "Liquidità",
+        newInvestment: "Nuovo investimento",
+        fallbackInvestment: "Investimento",
+        removeInvestment: "Rimuovi investimento",
+        investmentName: "Nome investimento",
+        allocationPercentage: "Percentuale di allocazione",
+        expectedAnnualReturn: "Rendimento annuo atteso",
+        yearNumber: "Anno {year}",
+        allocationWarning: "Le allocazioni attualmente sommano {total}%. Devono essere pari al 100%.",
+        chartNominal: "Nominale",
+        chartReal: "Reale",
+        inflationImpact: "Impatto dell'inflazione:",
+        inflationImpactText: "con {inflation} di inflazione annua, il potere d'acquisto si riduce di {gap} nel periodo selezionato.",
+        planningNote: "Nota di pianificazione:",
+        planningNoteText: "la ricchezza reale è di solito il numero migliore per pianificare lo stile di vita perché stima cosa può comprare il denaro ai valori di oggi."
+      }
+    };
+
+    Object.assign(translations.en, {
+      advisorTitle: "AI financial coach",
+      savingsRateLabel: "Savings rate",
+      realReturnLabel: "Real return estimate",
+      emergencyFundLabel: "Emergency fund target",
+      advisorDisclaimer: "This is educational guidance generated from your inputs, not licensed financial advice.",
+      adviceCashflowBadTitle: "Fix cash flow first:",
+      adviceCashflowBadText: "your expenses are higher than your income, so investing should wait until monthly spending is below income.",
+      adviceCashflowLowTitle: "Increase your savings rate:",
+      adviceCashflowLowText: "you are saving {rate} of income. Try to move toward 15%-20% before increasing investment risk.",
+      adviceCashflowStrongTitle: "Strong savings engine:",
+      adviceCashflowStrongText: "you are saving {rate} of income, which gives your plan useful flexibility and compounding power.",
+      adviceEmergencyLowTitle: "Build safety before risk:",
+      adviceEmergencyLowText: "your current wealth is below a 6-month emergency fund target of {target}. Keep part of your money liquid before taking more market risk.",
+      adviceEmergencyOkTitle: "Emergency fund looks covered:",
+      adviceEmergencyOkText: "your current wealth appears above the 6-month expense target, so excess savings can be considered for longer-term investing.",
+      adviceReturnLowTitle: "Inflation is beating the portfolio:",
+      adviceReturnLowText: "your estimated real return is {rate}. Consider whether too much of the portfolio is in low-return assets.",
+      adviceReturnOkTitle: "Positive real return:",
+      adviceReturnOkText: "your expected return is above inflation by about {rate}, which supports real wealth growth if assumptions hold.",
+      adviceConcentrationTitle: "Diversification check:",
+      adviceConcentrationText: "{name} is {allocation} of the portfolio. That concentration can be risky unless it matches your goals and risk tolerance.",
+      adviceAllocationTitle: "Clean up allocation:",
+      adviceAllocationText: "your investment percentages total {total}%. Make them equal 100% so the projection reflects the real plan.",
+      adviceFinalTitle: "Best next step:",
+      adviceFinalText: "review the assumptions every year, keep fees low, diversify, and compare nominal wealth with real wealth before making lifestyle decisions.",
+      countryInflation: "Country inflation",
+      manualInflation: "Manual inflation",
+      riskProfile: "Risk profile",
+      riskConservative: "Conservative",
+      riskBalanced: "Balanced",
+      riskAggressive: "Aggressive",
+      goalType: "Goal",
+      goalWealth: "Build wealth",
+      goalHouse: "Buy a house",
+      goalRetirement: "Retirement",
+      goalEducation: "Education",
+      goalAmount: "Goal amount",
+      monthlyInvestmentPercent: "Savings invested monthly %",
+      debtBalance: "Debt balance",
+      debtInterest: "Debt interest %",
+      monthlyDebtPayment: "Monthly debt payment",
+      goalProgressTitle: "Goal progress",
+      allocationChartTitle: "Investment breakdown",
+      scenarioTitle: "Scenario comparison",
+      exportReport: "Export PDF report",
+      askAdvisor: "Ask the advisor",
+      askAdvisorPlaceholder: "Example: What should I change first?",
+      askButton: "Ask",
+      scenarioCurrent: "Current plan",
+      scenarioSaveMore: "Save 10% more",
+      scenarioReturnMore: "Return +1%",
+      scenarioInflationLess: "Inflation -1%",
+      finalRealValue: "Final real value",
+      goalReached: "On track. Your projected wealth is {surplus} above the goal.",
+      goalMissed: "Gap to goal: {gap}. Increase savings, extend the period, lower fees, or review the return assumptions.",
+      goalNoAmount: "Enter a goal amount to see whether the plan is on track.",
+      monthsCovered: "{months} months covered",
+      debtWarningTitle: "Debt priority:",
+      debtWarningText: "your debt interest rate is {rate}. If this is high-interest debt, paying it down may beat taking extra investment risk.",
+      riskConservativeAdviceTitle: "Risk profile fit:",
+      riskConservativeAdviceText: "a conservative profile usually needs steadier assets and a larger emergency fund, even if growth is slower.",
+      riskBalancedAdviceTitle: "Risk profile fit:",
+      riskBalancedAdviceText: "a balanced profile usually works best with diversified growth assets plus defensive assets.",
+      riskAggressiveAdviceTitle: "Risk profile fit:",
+      riskAggressiveAdviceText: "an aggressive profile can target more growth, but only if you can tolerate large temporary losses.",
+      contributionAdviceTitle: "Contribution control:",
+      contributionAdviceText: "you invest {rate} of monthly surplus. The remaining surplus can support cash reserves, debt payoff, or short-term goals.",
+      advisorDefaultAnswer: "Based on your numbers, the first priority is: protect cash flow, keep an emergency fund, reduce expensive debt, then invest consistently in a diversified portfolio.",
+      advisorDebtAnswer: "Because you entered debt, compare its interest rate with your expected return. High-interest debt is often the best guaranteed return to eliminate first.",
+      advisorGoalAnswer: "To reach the goal faster, increase the invested savings percentage, extend the time horizon, reduce expenses, or choose a realistic higher-return mix that matches your risk profile.",
+      advisorRiskAnswer: "Risk should match your time horizon and emotional tolerance. A longer horizon can usually handle more growth assets; short-term goals need more stability."
+    });
+
+    Object.assign(translations.ar, {
+      advisorTitle: "\u0645\u062f\u0631\u0628 \u0645\u0627\u0644\u064a \u0628\u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a",
+      savingsRateLabel: "\u0645\u0639\u062f\u0644 \u0627\u0644\u0627\u062f\u062e\u0627\u0631",
+      realReturnLabel: "\u062a\u0642\u062f\u064a\u0631 \u0627\u0644\u0639\u0627\u0626\u062f \u0627\u0644\u062d\u0642\u064a\u0642\u064a",
+      emergencyFundLabel: "\u0647\u062f\u0641 \u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u0637\u0648\u0627\u0631\u0626",
+      advisorDisclaimer: "\u0647\u0630\u0647 \u0625\u0631\u0634\u0627\u062f\u0627\u062a \u062a\u0639\u0644\u064a\u0645\u064a\u0629 \u0645\u0648\u0644\u062f\u0629 \u0645\u0646 \u0645\u062f\u062e\u0644\u0627\u062a\u0643\u060c \u0648\u0644\u064a\u0633\u062a \u0646\u0635\u064a\u062d\u0629 \u0645\u0627\u0644\u064a\u0629 \u0645\u0631\u062e\u0635\u0629.",
+      adviceCashflowBadTitle: "\u0623\u0635\u0644\u062d \u0627\u0644\u062a\u062f\u0641\u0642 \u0627\u0644\u0646\u0642\u062f\u064a \u0623\u0648\u0644\u0627:",
+      adviceCashflowBadText: "\u0645\u0635\u0631\u0648\u0641\u0627\u062a\u0643 \u0623\u0639\u0644\u0649 \u0645\u0646 \u062f\u062e\u0644\u0643\u060c \u0644\u0630\u0644\u0643 \u064a\u0641\u0636\u0644 \u062a\u0623\u062c\u064a\u0644 \u0627\u0644\u0627\u0633\u062a\u062b\u0645\u0627\u0631 \u062d\u062a\u0649 \u064a\u0643\u0648\u0646 \u0627\u0644\u0625\u0646\u0641\u0627\u0642 \u0623\u0642\u0644 \u0645\u0646 \u0627\u0644\u062f\u062e\u0644.",
+      adviceCashflowLowTitle: "\u0632\u062f \u0645\u0639\u062f\u0644 \u0627\u0644\u0627\u062f\u062e\u0627\u0631:",
+      adviceCashflowLowText: "\u0623\u0646\u062a \u062a\u062f\u062e\u0631 {rate} \u0645\u0646 \u0627\u0644\u062f\u062e\u0644. \u062d\u0627\u0648\u0644 \u0627\u0644\u0648\u0635\u0648\u0644 \u0625\u0644\u0649 15%-20% \u0642\u0628\u0644 \u0632\u064a\u0627\u062f\u0629 \u0645\u062e\u0627\u0637\u0631 \u0627\u0644\u0627\u0633\u062a\u062b\u0645\u0627\u0631.",
+      adviceCashflowStrongTitle: "\u0642\u0648\u0629 \u0627\u062f\u062e\u0627\u0631 \u062c\u064a\u062f\u0629:",
+      adviceCashflowStrongText: "\u0623\u0646\u062a \u062a\u062f\u062e\u0631 {rate} \u0645\u0646 \u0627\u0644\u062f\u062e\u0644\u060c \u0648\u0647\u0630\u0627 \u064a\u0639\u0637\u064a \u062e\u0637\u062a\u0643 \u0645\u0631\u0648\u0646\u0629 \u0648\u0642\u0648\u0629 \u0646\u0645\u0648.",
+      adviceEmergencyLowTitle: "\u0627\u0628\u0646 \u0627\u0644\u0623\u0645\u0627\u0646 \u0642\u0628\u0644 \u0627\u0644\u0645\u062e\u0627\u0637\u0631\u0629:",
+      adviceEmergencyLowText: "\u062b\u0631\u0648\u062a\u0643 \u0627\u0644\u062d\u0627\u0644\u064a\u0629 \u0623\u0642\u0644 \u0645\u0646 \u0647\u062f\u0641 \u0635\u0646\u062f\u0648\u0642 \u0637\u0648\u0627\u0631\u0626 \u0644\u0640 6 \u0623\u0634\u0647\u0631 \u0648\u0642\u062f\u0631\u0647 {target}. \u0627\u062d\u062a\u0641\u0638 \u0628\u062c\u0632\u0621 \u0633\u0627\u0626\u0644 \u0642\u0628\u0644 \u0632\u064a\u0627\u062f\u0629 \u0627\u0644\u0645\u062e\u0627\u0637\u0631\u0629.",
+      adviceEmergencyOkTitle: "\u0635\u0646\u062f\u0648\u0642 \u0627\u0644\u0637\u0648\u0627\u0631\u0626 \u064a\u0628\u062f\u0648 \u0645\u063a\u0637\u0649:",
+      adviceEmergencyOkText: "\u062b\u0631\u0648\u062a\u0643 \u062a\u062a\u062c\u0627\u0648\u0632 \u0647\u062f\u0641 \u0645\u0635\u0631\u0648\u0641\u0627\u062a 6 \u0623\u0634\u0647\u0631\u060c \u0644\u0630\u0627 \u064a\u0645\u0643\u0646 \u062f\u0631\u0627\u0633\u0629 \u062a\u0648\u062c\u064a\u0647 \u0627\u0644\u0641\u0627\u0626\u0636 \u0644\u0644\u0627\u0633\u062a\u062b\u0645\u0627\u0631 \u0637\u0648\u064a\u0644 \u0627\u0644\u0623\u062c\u0644.",
+      adviceReturnLowTitle: "\u0627\u0644\u062a\u0636\u062e\u0645 \u064a\u062a\u0641\u0648\u0642 \u0639\u0644\u0649 \u0627\u0644\u0645\u062d\u0641\u0638\u0629:",
+      adviceReturnLowText: "\u0627\u0644\u0639\u0627\u0626\u062f \u0627\u0644\u062d\u0642\u064a\u0642\u064a \u0627\u0644\u0645\u0642\u062f\u0631 {rate}. \u0631\u0627\u062c\u0639 \u0645\u0627 \u0625\u0630\u0627 \u0643\u0627\u0646\u062a \u0646\u0633\u0628\u0629 \u0643\u0628\u064a\u0631\u0629 \u0641\u064a \u0623\u0635\u0648\u0644 \u0645\u0646\u062e\u0641\u0636\u0629 \u0627\u0644\u0639\u0627\u0626\u062f.",
+      adviceReturnOkTitle: "\u0639\u0627\u0626\u062f \u062d\u0642\u064a\u0642\u064a \u0625\u064a\u062c\u0627\u0628\u064a:",
+      adviceReturnOkText: "\u0639\u0627\u0626\u062f\u0643 \u0627\u0644\u0645\u062a\u0648\u0642\u0639 \u0623\u0639\u0644\u0649 \u0645\u0646 \u0627\u0644\u062a\u0636\u062e\u0645 \u0628\u0646\u062d\u0648 {rate}\u060c \u0645\u0627 \u064a\u062f\u0639\u0645 \u0646\u0645\u0648 \u0627\u0644\u062b\u0631\u0648\u0629 \u0627\u0644\u062d\u0642\u064a\u0642\u064a\u0629 \u0625\u0630\u0627 \u0635\u062d\u062a \u0627\u0644\u0627\u0641\u062a\u0631\u0627\u0636\u0627\u062a.",
+      adviceConcentrationTitle: "\u0641\u062d\u0635 \u0627\u0644\u062a\u0646\u0648\u064a\u0639:",
+      adviceConcentrationText: "{name} \u064a\u0645\u062b\u0644 {allocation} \u0645\u0646 \u0627\u0644\u0645\u062d\u0641\u0638\u0629. \u0647\u0630\u0627 \u0627\u0644\u062a\u0631\u0643\u064a\u0632 \u0642\u062f \u064a\u0643\u0648\u0646 \u062e\u0637\u0631\u0627 \u0625\u0644\u0627 \u0625\u0630\u0627 \u0643\u0627\u0646 \u0645\u0646\u0627\u0633\u0628\u0627 \u0644\u0623\u0647\u062f\u0627\u0641\u0643 \u0648\u062a\u062d\u0645\u0644\u0643 \u0644\u0644\u0645\u062e\u0627\u0637\u0631.",
+      adviceAllocationTitle: "\u0631\u062a\u0628 \u0627\u0644\u062a\u0648\u0632\u064a\u0639:",
+      adviceAllocationText: "\u0646\u0633\u0628 \u0627\u0633\u062a\u062b\u0645\u0627\u0631\u0627\u062a\u0643 \u062a\u0633\u0627\u0648\u064a {total}%. \u0627\u062c\u0639\u0644\u0647\u0627 100% \u062d\u062a\u0649 \u064a\u0639\u0643\u0633 \u0627\u0644\u062a\u0648\u0642\u0639 \u062e\u0637\u062a\u0643 \u0627\u0644\u062d\u0642\u064a\u0642\u064a\u0629.",
+      adviceFinalTitle: "\u0623\u0641\u0636\u0644 \u062e\u0637\u0648\u0629 \u062a\u0627\u0644\u064a\u0629:",
+      adviceFinalText: "\u0631\u0627\u062c\u0639 \u0627\u0644\u0627\u0641\u062a\u0631\u0627\u0636\u0627\u062a \u0643\u0644 \u0639\u0627\u0645\u060c \u0648\u0627\u062d\u0641\u0638 \u0627\u0644\u0631\u0633\u0648\u0645 \u0645\u0646\u062e\u0641\u0636\u0629\u060c \u0648\u0646\u0648\u0639 \u0627\u0633\u062a\u062b\u0645\u0627\u0631\u0627\u062a\u0643\u060c \u0648\u0642\u0627\u0631\u0646 \u0627\u0644\u062b\u0631\u0648\u0629 \u0627\u0644\u0627\u0633\u0645\u064a\u0629 \u0628\u0627\u0644\u062d\u0642\u064a\u0642\u064a\u0629 \u0642\u0628\u0644 \u0642\u0631\u0627\u0631\u0627\u062a \u0646\u0645\u0637 \u0627\u0644\u062d\u064a\u0627\u0629."
+    });
+
+    Object.assign(translations.fr, {
+      advisorTitle: "Coach financier IA",
+      savingsRateLabel: "Taux d'epargne",
+      realReturnLabel: "Rendement reel estime",
+      emergencyFundLabel: "Objectif fonds d'urgence",
+      advisorDisclaimer: "Ceci est une orientation educative generee a partir de vos donnees, pas un conseil financier agree.",
+      adviceCashflowBadTitle: "Corrigez d'abord la tresorerie :",
+      adviceCashflowBadText: "vos depenses sont superieures a vos revenus, donc l'investissement devrait attendre que les depenses mensuelles soient inferieures au revenu.",
+      adviceCashflowLowTitle: "Augmentez votre taux d'epargne :",
+      adviceCashflowLowText: "vous epargnez {rate} du revenu. Essayez de viser 15 %-20 % avant d'augmenter le risque d'investissement.",
+      adviceCashflowStrongTitle: "Moteur d'epargne solide :",
+      adviceCashflowStrongText: "vous epargnez {rate} du revenu, ce qui donne a votre plan de la flexibilite et une bonne force de capitalisation.",
+      adviceEmergencyLowTitle: "Construisez la securite avant le risque :",
+      adviceEmergencyLowText: "votre richesse actuelle est sous l'objectif de fonds d'urgence de 6 mois, soit {target}. Gardez une partie liquide avant de prendre plus de risque de marche.",
+      adviceEmergencyOkTitle: "Le fonds d'urgence semble couvert :",
+      adviceEmergencyOkText: "votre richesse actuelle semble superieure a l'objectif de 6 mois de depenses, donc l'excedent peut etre envisage pour l'investissement long terme.",
+      adviceReturnLowTitle: "L'inflation bat le portefeuille :",
+      adviceReturnLowText: "votre rendement reel estime est {rate}. Verifiez si trop du portefeuille est place dans des actifs a faible rendement.",
+      adviceReturnOkTitle: "Rendement reel positif :",
+      adviceReturnOkText: "votre rendement attendu depasse l'inflation d'environ {rate}, ce qui soutient la croissance de richesse reelle si les hypotheses tiennent.",
+      adviceConcentrationTitle: "Controle de diversification :",
+      adviceConcentrationText: "{name} represente {allocation} du portefeuille. Cette concentration peut etre risquee sauf si elle correspond a vos objectifs et a votre tolerance au risque.",
+      adviceAllocationTitle: "Nettoyez l'allocation :",
+      adviceAllocationText: "vos pourcentages d'investissement totalisent {total} %. Ils doivent faire 100 % pour que la projection reflete le plan reel.",
+      adviceFinalTitle: "Meilleure prochaine etape :",
+      adviceFinalText: "revoyez les hypotheses chaque annee, gardez les frais bas, diversifiez, et comparez richesse nominale et richesse reelle avant les decisions de style de vie."
+    });
+
+    Object.assign(translations.es, {
+      advisorTitle: "Asesor financiero con IA",
+      savingsRateLabel: "Tasa de ahorro",
+      realReturnLabel: "Retorno real estimado",
+      emergencyFundLabel: "Meta de fondo de emergencia",
+      advisorDisclaimer: "Esta es orientacion educativa generada con tus datos, no asesoramiento financiero autorizado.",
+      adviceCashflowBadTitle: "Arregla primero el flujo de caja:",
+      adviceCashflowBadText: "tus gastos son mayores que tus ingresos, asi que invertir deberia esperar hasta que el gasto mensual este por debajo del ingreso.",
+      adviceCashflowLowTitle: "Aumenta tu tasa de ahorro:",
+      adviceCashflowLowText: "estas ahorrando {rate} del ingreso. Intenta acercarte a 15%-20% antes de aumentar el riesgo de inversion.",
+      adviceCashflowStrongTitle: "Buen motor de ahorro:",
+      adviceCashflowStrongText: "estas ahorrando {rate} del ingreso, lo que da flexibilidad y poder de capitalizacion a tu plan.",
+      adviceEmergencyLowTitle: "Construye seguridad antes del riesgo:",
+      adviceEmergencyLowText: "tu riqueza actual esta por debajo de una meta de fondo de emergencia de 6 meses: {target}. Mantén parte del dinero liquida antes de tomar mas riesgo de mercado.",
+      adviceEmergencyOkTitle: "El fondo de emergencia parece cubierto:",
+      adviceEmergencyOkText: "tu riqueza actual parece superar la meta de 6 meses de gastos, asi que el excedente puede considerarse para inversion de largo plazo.",
+      adviceReturnLowTitle: "La inflacion supera al portafolio:",
+      adviceReturnLowText: "tu retorno real estimado es {rate}. Revisa si demasiado del portafolio esta en activos de bajo retorno.",
+      adviceReturnOkTitle: "Retorno real positivo:",
+      adviceReturnOkText: "tu retorno esperado supera la inflacion por cerca de {rate}, lo que apoya crecimiento real si las suposiciones se cumplen.",
+      adviceConcentrationTitle: "Revision de diversificacion:",
+      adviceConcentrationText: "{name} es {allocation} del portafolio. Esa concentracion puede ser riesgosa salvo que encaje con tus metas y tolerancia al riesgo.",
+      adviceAllocationTitle: "Ajusta la asignacion:",
+      adviceAllocationText: "tus porcentajes de inversion suman {total}%. Deben sumar 100% para que la proyeccion refleje el plan real.",
+      adviceFinalTitle: "Mejor siguiente paso:",
+      adviceFinalText: "revisa las suposiciones cada ano, mantén bajas las comisiones, diversifica y compara riqueza nominal con riqueza real antes de decisiones de estilo de vida."
+    });
+
+    Object.assign(translations.it, {
+      advisorTitle: "Coach finanziario IA",
+      savingsRateLabel: "Tasso di risparmio",
+      realReturnLabel: "Rendimento reale stimato",
+      emergencyFundLabel: "Obiettivo fondo emergenza",
+      advisorDisclaimer: "Questa e una guida educativa generata dai tuoi dati, non una consulenza finanziaria autorizzata.",
+      adviceCashflowBadTitle: "Sistema prima il flusso di cassa:",
+      adviceCashflowBadText: "le spese sono superiori al reddito, quindi l'investimento dovrebbe aspettare finche la spesa mensile resta sotto il reddito.",
+      adviceCashflowLowTitle: "Aumenta il tasso di risparmio:",
+      adviceCashflowLowText: "stai risparmiando {rate} del reddito. Prova ad avvicinarti al 15%-20% prima di aumentare il rischio d'investimento.",
+      adviceCashflowStrongTitle: "Buon motore di risparmio:",
+      adviceCashflowStrongText: "stai risparmiando {rate} del reddito, dando al piano flessibilita e forza di capitalizzazione.",
+      adviceEmergencyLowTitle: "Costruisci sicurezza prima del rischio:",
+      adviceEmergencyLowText: "la tua ricchezza attuale e sotto l'obiettivo di fondo emergenza di 6 mesi, pari a {target}. Tieni una parte liquida prima di prendere piu rischio di mercato.",
+      adviceEmergencyOkTitle: "Il fondo emergenza sembra coperto:",
+      adviceEmergencyOkText: "la tua ricchezza attuale sembra sopra l'obiettivo di 6 mesi di spese, quindi l'eccedenza puo essere valutata per investimenti di lungo periodo.",
+      adviceReturnLowTitle: "L'inflazione batte il portafoglio:",
+      adviceReturnLowText: "il rendimento reale stimato e {rate}. Valuta se troppa parte del portafoglio e in asset a basso rendimento.",
+      adviceReturnOkTitle: "Rendimento reale positivo:",
+      adviceReturnOkText: "il rendimento atteso supera l'inflazione di circa {rate}, sostenendo la crescita reale se le ipotesi reggono.",
+      adviceConcentrationTitle: "Controllo diversificazione:",
+      adviceConcentrationText: "{name} rappresenta {allocation} del portafoglio. Questa concentrazione puo essere rischiosa se non corrisponde ai tuoi obiettivi e alla tua tolleranza al rischio.",
+      adviceAllocationTitle: "Sistema l'allocazione:",
+      adviceAllocationText: "le percentuali di investimento sommano {total}%. Devono essere pari al 100% per riflettere il piano reale.",
+      adviceFinalTitle: "Miglior passo successivo:",
+      adviceFinalText: "rivedi le ipotesi ogni anno, mantieni bassi i costi, diversifica e confronta ricchezza nominale e reale prima di decisioni sullo stile di vita."
+    });
+
+    const locales = {
+      en: "en-US",
+      ar: "ar-EG",
+      fr: "fr-FR",
+      es: "es-ES",
+      it: "it-IT"
+    };
+
+    let currentLang = "en";
+
+    const investmentsEl = document.querySelector("#investments");
+    const allocationWarning = document.querySelector("#allocationWarning");
+    const rowsEl = document.querySelector("#projectionRows");
+    const chart = document.querySelector("#chart");
+    const ctx = chart.getContext("2d");
+    const allocationChart = document.querySelector("#allocationChart");
+    const allocationCtx = allocationChart.getContext("2d");
+
+    const defaults = [
+      { key: "defaultStocks", allocation: 60, rate: 7 },
+      { key: "defaultBonds", allocation: 25, rate: 4 },
+      { key: "defaultCash", allocation: 15, rate: 1.5 }
+    ];
+
+    function t(key, values = {}) {
+      let text = translations[currentLang][key] || translations.en[key] || key;
+      Object.entries(values).forEach(([name, value]) => {
+        text = text.replace(`{${name}}`, value);
+      });
+      return text;
+    }
+
+    function money(value) {
+      const currency = document.querySelector("#currency").value;
+      return new Intl.NumberFormat(locales[currentLang], {
+        style: "currency",
+        currency,
+        maximumFractionDigits: 0
+      }).format(value || 0);
+    }
+
+    function pct(value) {
+      return new Intl.NumberFormat(locales[currentLang], {
+        maximumFractionDigits: 2,
+        minimumFractionDigits: 2
+      }).format(Number(value || 0)) + "%";
+    }
+
+    function number(id) {
+      return Number(document.querySelector(id).value) || 0;
+    }
+
+    function addInvestment(data = { name: "", allocation: 0, rate: 0 }) {
+      const row = document.createElement("div");
+      row.className = "investment-row";
+      const name = data.key ? t(data.key) : data.name;
+      row.innerHTML = `
+        <input class="inv-name" aria-label="${t("investmentName")}" value="${name}" data-default-key="${data.key || ""}">
+        <input class="inv-allocation" aria-label="${t("allocationPercentage")}" type="number" step="0.1" value="${data.allocation}">
+        <input class="inv-rate" aria-label="${t("expectedAnnualReturn")}" type="number" step="0.1" value="${data.rate}">
+        <button class="icon-btn" type="button" title="${t("removeInvestment")}">&times;</button>
+      `;
+      row.querySelector("button").addEventListener("click", () => {
+        if (document.querySelectorAll(".investment-row").length > 1) {
+          row.remove();
+          calculate();
+        }
+      });
+      row.querySelector(".inv-name").addEventListener("input", event => {
+        event.target.dataset.defaultKey = "";
+        calculate();
+      });
+      row.querySelectorAll(".inv-allocation, .inv-rate").forEach(input => input.addEventListener("input", calculate));
+      investmentsEl.appendChild(row);
+    }
+
+    function getInvestments() {
+      return [...document.querySelectorAll(".investment-row")].map(row => ({
+        name: row.querySelector(".inv-name").value.trim() || t("fallbackInvestment"),
+        allocation: Number(row.querySelector(".inv-allocation").value) || 0,
+        rate: Number(row.querySelector(".inv-rate").value) || 0
+      }));
+    }
+
+    function weightedReturn(investments) {
+      return investments.reduce((sum, item) => sum + (item.allocation / 100) * (item.rate / 100), 0);
+    }
+
+    function validateAllocation(investments) {
+      const total = investments.reduce((sum, item) => sum + item.allocation, 0);
+      const diff = Math.abs(total - 100);
+      allocationWarning.textContent = diff > 0.01 ? t("allocationWarning", { total: total.toFixed(1) }) : "";
+      return total;
+    }
+
+    function readPlan(overrides = {}) {
+      const investments = getInvestments();
+      const allocationTotal = investments.reduce((sum, item) => sum + item.allocation, 0);
+      const baseReturn = allocationTotal ? weightedReturn(investments) * (100 / allocationTotal) : 0;
+      return {
+        years: Math.min(10, Math.max(1, number("#years"))),
+        startingWealth: number("#wealth"),
+        monthlyIncome: number("#income"),
+        monthlyExpenses: number("#expenses"),
+        incomeGrowth: number("#incomeGrowth") / 100,
+        inflation: number("#inflation") / 100,
+        investPercent: Math.min(100, Math.max(0, number("#investPercent"))) / 100,
+        debtBalance: number("#debtBalance"),
+        debtInterest: number("#debtInterest") / 100,
+        debtPayment: number("#debtPayment"),
+        investments,
+        allocationTotal,
+        effectiveReturn: baseReturn,
+        ...overrides
+      };
+    }
+
+    function runProjection(plan) {
+      const {
+        years,
+        startingWealth,
+        monthlyIncome,
+        monthlyExpenses,
+        incomeGrowth,
+        inflation,
+        investPercent,
+        debtPayment,
+        effectiveReturn
+      } = plan;
+
+      let wealth = startingWealth;
+      let totalContributions = 0;
+      const result = [];
+
+      for (let year = 1; year <= years; year++) {
+        const annualIncome = monthlyIncome * 12 * Math.pow(1 + incomeGrowth, year - 1);
+        const annualExpenses = monthlyExpenses * 12 * Math.pow(1 + inflation, year - 1);
+        const annualDebtPayment = debtPayment * 12;
+        const availableSavings = Math.max(0, annualIncome - annualExpenses - annualDebtPayment);
+        const contribution = availableSavings * investPercent;
+        const growth = wealth * effectiveReturn;
+        wealth = wealth + growth + contribution;
+        totalContributions += contribution;
+        const realWealth = wealth / Math.pow(1 + inflation, year);
+
+        result.push({ year, annualIncome, contribution, growth, nominal: wealth, real: realWealth });
+      }
+
+      return { result, effectiveReturn, totalContributions, inflation, allocationTotal: plan.allocationTotal, plan };
+    }
+
+    function project() {
+      const plan = readPlan();
+      validateAllocation(plan.investments);
+      return runProjection(plan);
+    }
+
+    function drawChart(result) {
+      const width = chart.width;
+      const height = chart.height;
+      const pad = 42;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+
+      if (!result.length) return;
+
+      const max = Math.max(...result.flatMap(row => [row.nominal, row.real]), 1);
+      const x = index => pad + (index / Math.max(1, result.length - 1)) * (width - pad * 2);
+      const y = value => height - pad - (value / max) * (height - pad * 2);
+
+      ctx.strokeStyle = "#dfe4dc";
+      ctx.lineWidth = 1;
+      ctx.font = "12px Inter, sans-serif";
+      ctx.fillStyle = "#667064";
+      for (let i = 0; i <= 4; i++) {
+        const yy = pad + i * ((height - pad * 2) / 4);
+        ctx.beginPath();
+        ctx.moveTo(pad, yy);
+        ctx.lineTo(width - pad, yy);
+        ctx.stroke();
+      }
+
+      function line(key, color) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        result.forEach((row, index) => {
+          const xx = x(index);
+          const yy = y(row[key]);
+          if (index === 0) ctx.moveTo(xx, yy);
+          else ctx.lineTo(xx, yy);
+        });
+        ctx.stroke();
+      }
+
+      line("nominal", "#1f7a4d");
+      line("real", "#315f8f");
+
+      result.forEach((row, index) => {
+        ctx.fillStyle = "#667064";
+        ctx.fillText(String(row.year), x(index) - 3, height - 14);
+      });
+
+      ctx.fillStyle = "#1f7a4d";
+      ctx.fillRect(width - 210, 18, 14, 14);
+      ctx.fillStyle = "#17211b";
+      ctx.fillText(t("chartNominal"), width - 188, 30);
+      ctx.fillStyle = "#315f8f";
+      ctx.fillRect(width - 100, 18, 14, 14);
+      ctx.fillStyle = "#17211b";
+      ctx.fillText(t("chartReal"), width - 78, 30);
+    }
+
+    function drawAllocationChart() {
+      const investments = getInvestments().filter(item => item.allocation > 0);
+      const width = allocationChart.width;
+      const height = allocationChart.height;
+      const centerX = 95;
+      const centerY = 110;
+      const radius = 70;
+      const colors = ["#1f7a4d", "#315f8f", "#b66a00", "#7b4ab8", "#c43f3f", "#2f7f7a"];
+      const total = investments.reduce((sum, item) => sum + item.allocation, 0) || 1;
+      let start = -Math.PI / 2;
+
+      allocationCtx.clearRect(0, 0, width, height);
+      allocationCtx.fillStyle = "#fff";
+      allocationCtx.fillRect(0, 0, width, height);
+
+      investments.forEach((item, index) => {
+        const slice = (item.allocation / total) * Math.PI * 2;
+        allocationCtx.beginPath();
+        allocationCtx.moveTo(centerX, centerY);
+        allocationCtx.arc(centerX, centerY, radius, start, start + slice);
+        allocationCtx.closePath();
+        allocationCtx.fillStyle = colors[index % colors.length];
+        allocationCtx.fill();
+        start += slice;
+      });
+
+      allocationCtx.font = "12px Inter, sans-serif";
+      investments.slice(0, 5).forEach((item, index) => {
+        const y = 52 + index * 24;
+        allocationCtx.fillStyle = colors[index % colors.length];
+        allocationCtx.fillRect(190, y - 10, 12, 12);
+        allocationCtx.fillStyle = "#17211b";
+        allocationCtx.fillText(`${item.name}: ${pct(item.allocation)}`, 210, y);
+      });
+    }
+
+    function updateGoal(result) {
+      const final = result[result.length - 1] || { real: 0 };
+      const goalAmount = number("#goalAmount");
+      const goalStatus = document.querySelector("#goalStatus");
+      const goalAdvice = document.querySelector("#goalAdvice");
+
+      if (!goalAmount) {
+        goalStatus.textContent = money(0);
+        goalAdvice.textContent = t("goalNoAmount");
+        return;
+      }
+
+      const gap = goalAmount - final.real;
+      goalStatus.textContent = `${money(final.real)} / ${money(goalAmount)}`;
+      goalAdvice.textContent = gap <= 0
+        ? t("goalReached", { surplus: money(Math.abs(gap)) })
+        : t("goalMissed", { gap: money(gap) });
+    }
+
+    function renderScenarios(basePlan) {
+      const scenarios = [
+        { label: t("scenarioCurrent"), plan: basePlan },
+        { label: t("scenarioSaveMore"), plan: { ...basePlan, investPercent: Math.min(1, basePlan.investPercent + 0.1) } },
+        { label: t("scenarioReturnMore"), plan: { ...basePlan, effectiveReturn: basePlan.effectiveReturn + 0.01 } },
+        { label: t("scenarioInflationLess"), plan: { ...basePlan, inflation: Math.max(0, basePlan.inflation - 0.01) } }
+      ];
+
+      document.querySelector("#scenarioGrid").innerHTML = scenarios.map(item => {
+        const projection = runProjection(item.plan);
+        const final = projection.result[projection.result.length - 1] || { real: 0 };
+        return `
+          <div class="scenario-card">
+            <span>${item.label}</span>
+            <strong>${money(final.real)}</strong>
+            <p>${t("finalRealValue")}</p>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function answerAdvisorQuestion() {
+      const question = document.querySelector("#advisorQuestion").value.toLowerCase();
+      const debtBalance = number("#debtBalance");
+      let answer = t("advisorDefaultAnswer");
+
+      if (question.includes("goal") || question.includes("faster") || question.includes("reach")) {
+        answer = t("advisorGoalAnswer");
+      } else if (question.includes("debt") || question.includes("loan") || debtBalance > 0) {
+        answer = t("advisorDebtAnswer");
+      } else if (question.includes("risk") || question.includes("portfolio")) {
+        answer = t("advisorRiskAnswer");
+      }
+
+      document.querySelector("#advisorAnswer").textContent = answer;
+    }
+
+    function buildAdvice(effectiveReturn, inflation, allocationTotal) {
+      const monthlyIncome = number("#income");
+      const monthlyExpenses = number("#expenses");
+      const currentWealth = number("#wealth");
+      const monthlySavings = monthlyIncome - monthlyExpenses;
+      const savingsRate = monthlyIncome > 0 ? monthlySavings / monthlyIncome : 0;
+      const emergencyTarget = monthlyExpenses * 6;
+      const monthsCovered = monthlyExpenses > 0 ? currentWealth / monthlyExpenses : 0;
+      const realReturn = ((1 + effectiveReturn) / (1 + inflation)) - 1;
+      const investments = getInvestments();
+      const largest = investments.reduce((max, item) => item.allocation > max.allocation ? item : max, { name: "", allocation: 0 });
+      const advice = [];
+      const riskProfile = document.querySelector("#riskProfile").value;
+      const investPercent = Math.min(100, Math.max(0, number("#investPercent")));
+      const debtBalance = number("#debtBalance");
+      const debtInterest = number("#debtInterest");
+
+      if (monthlySavings <= 0) {
+        advice.push(["adviceCashflowBadTitle", "adviceCashflowBadText", {}]);
+      } else if (savingsRate < 0.15) {
+        advice.push(["adviceCashflowLowTitle", "adviceCashflowLowText", { rate: pct(savingsRate * 100) }]);
+      } else {
+        advice.push(["adviceCashflowStrongTitle", "adviceCashflowStrongText", { rate: pct(savingsRate * 100) }]);
+      }
+
+      if (monthlyExpenses > 0 && currentWealth < emergencyTarget) {
+        advice.push(["adviceEmergencyLowTitle", "adviceEmergencyLowText", { target: money(emergencyTarget) }]);
+      } else if (monthlyExpenses > 0) {
+        advice.push(["adviceEmergencyOkTitle", "adviceEmergencyOkText", {}]);
+      }
+
+      if (debtBalance > 0 && debtInterest >= 7) {
+        advice.push(["debtWarningTitle", "debtWarningText", { rate: pct(debtInterest) }]);
+      }
+
+      if (realReturn < 0.01) {
+        advice.push(["adviceReturnLowTitle", "adviceReturnLowText", { rate: pct(realReturn * 100) }]);
+      } else {
+        advice.push(["adviceReturnOkTitle", "adviceReturnOkText", { rate: pct(realReturn * 100) }]);
+      }
+
+      if (largest.allocation > 70) {
+        advice.push(["adviceConcentrationTitle", "adviceConcentrationText", {
+          name: largest.name,
+          allocation: pct(largest.allocation)
+        }]);
+      }
+
+      if (Math.abs(allocationTotal - 100) > 0.01) {
+        advice.push(["adviceAllocationTitle", "adviceAllocationText", { total: allocationTotal.toFixed(1) }]);
+      }
+
+      if (investPercent < 100 && monthlySavings > 0) {
+        advice.push(["contributionAdviceTitle", "contributionAdviceText", { rate: pct(investPercent) }]);
+      }
+
+      if (riskProfile === "conservative") {
+        advice.push(["riskConservativeAdviceTitle", "riskConservativeAdviceText", {}]);
+      } else if (riskProfile === "aggressive") {
+        advice.push(["riskAggressiveAdviceTitle", "riskAggressiveAdviceText", {}]);
+      } else {
+        advice.push(["riskBalancedAdviceTitle", "riskBalancedAdviceText", {}]);
+      }
+
+      advice.push(["adviceFinalTitle", "adviceFinalText", {}]);
+
+      document.querySelector("#advisorSavingsRate").textContent = pct(savingsRate * 100);
+      document.querySelector("#advisorRealReturn").textContent = pct(realReturn * 100);
+      document.querySelector("#advisorEmergencyFund").textContent = `${money(emergencyTarget)} (${t("monthsCovered", { months: monthsCovered.toFixed(1) })})`;
+      document.querySelector("#adviceList").innerHTML = advice.map(([titleKey, textKey, values]) => `
+        <li><b>${t(titleKey)}</b> ${t(textKey, values)}</li>
+      `).join("");
+    }
+
+    function calculate() {
+      const { result, effectiveReturn, totalContributions, inflation, allocationTotal } = project();
+      const plan = readPlan();
+      const final = result[result.length - 1] || { nominal: 0, real: 0 };
+
+      document.querySelector("#finalNominal").textContent = money(final.nominal);
+      document.querySelector("#finalReal").textContent = money(final.real);
+      document.querySelector("#weightedReturn").textContent = pct(effectiveReturn * 100);
+      document.querySelector("#totalContributions").textContent = money(totalContributions);
+
+      rowsEl.innerHTML = result.map(row => `
+        <tr>
+          <td>${t("yearNumber", { year: row.year })}</td>
+          <td>${money(row.annualIncome)}</td>
+          <td>${money(row.contribution)}</td>
+          <td>${money(row.growth)}</td>
+          <td>${money(row.nominal)}</td>
+          <td>${money(row.real)}</td>
+        </tr>
+      `).join("");
+
+      const gap = final.nominal - final.real;
+      document.querySelector("#insights").innerHTML = `
+        <div><b>${t("inflationImpact")}</b> ${t("inflationImpactText", { inflation: pct(inflation * 100), gap: money(gap) })}</div>
+        <div><b>${t("planningNote")}</b> ${t("planningNoteText")}</div>
+      `;
+
+      drawChart(result);
+      drawAllocationChart();
+      updateGoal(result);
+      renderScenarios(plan);
+      buildAdvice(effectiveReturn, inflation, allocationTotal);
+    }
+
+    function applyTranslations() {
+      document.documentElement.lang = currentLang;
+      document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
+      document.title = t("appTitle");
+      document.querySelectorAll("[data-i18n]").forEach(element => {
+        element.textContent = t(element.dataset.i18n);
+      });
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(element => {
+        element.setAttribute("placeholder", t(element.dataset.i18nPlaceholder));
+      });
+      document.querySelectorAll(".inv-name").forEach(input => {
+        if (input.dataset.defaultKey) input.value = t(input.dataset.defaultKey);
+        input.setAttribute("aria-label", t("investmentName"));
+      });
+      document.querySelectorAll(".inv-allocation").forEach(input => input.setAttribute("aria-label", t("allocationPercentage")));
+      document.querySelectorAll(".inv-rate").forEach(input => input.setAttribute("aria-label", t("expectedAnnualReturn")));
+      document.querySelectorAll(".icon-btn").forEach(button => button.setAttribute("title", t("removeInvestment")));
+      chart.setAttribute("aria-label", t("projection"));
+      calculate();
+    }
+
+    defaults.forEach(addInvestment);
+
+    document.querySelectorAll("input, select").forEach(input => input.addEventListener("input", calculate));
+    document.querySelector("#calculate").addEventListener("click", calculate);
+    document.querySelector("#addInvestment").addEventListener("click", () => {
+      addInvestment({ name: t("newInvestment"), allocation: 0, rate: 0 });
+      calculate();
+    });
+    document.querySelector("#inflationPreset").addEventListener("change", event => {
+      if (event.target.value) {
+        document.querySelector("#inflation").value = event.target.value;
+        calculate();
+      }
+    });
+    document.querySelector("#countryInflation").addEventListener("change", event => {
+      if (event.target.value) {
+        document.querySelector("#inflation").value = event.target.value;
+        calculate();
+      }
+    });
+    document.querySelector("#exportReport").addEventListener("click", () => {
+      window.print();
+    });
+    document.querySelector("#askAdvisorButton").addEventListener("click", answerAdvisorQuestion);
+    document.querySelector("#language").addEventListener("change", event => {
+      currentLang = event.target.value;
+      applyTranslations();
+    });
+
+    applyTranslations();
+  </script>
+</body>
+</html>
